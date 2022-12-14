@@ -1,29 +1,16 @@
 #include "osc_client.h"
 
-Osc::Client::Client(QHostAddress address, quint16 port)
-{
-    this->_address = address;
-    this->_port = port;
-    this->_heartbeat = QTime::currentTime();
+Osc::Client::Client(QHostAddress address, quint16 port) {
+  this->_address = address;
+  this->_port = port;
+  this->_heartbeat = QTime::currentTime();
 }
-Osc::Client::~Client() { }
+Osc::Client::~Client() {}
 
-QHostAddress Osc::Client::address()
-{
-    return _address;
-}
+QHostAddress Osc::Client::address() { return _address; }
 
-quint16 Osc::Client::port()
-{
-    return _port;
-}
+quint16 Osc::Client::port() { return _port; }
 
-QTime Osc::Client::heartbeat()
-{
-    return _heartbeat;
-}
+QTime Osc::Client::heartbeat() { return _heartbeat; }
 
-void Osc::Client::setHeartbeat()
-{
-    this->_heartbeat = QTime::currentTime();
-}
+void Osc::Client::setHeartbeat() { this->_heartbeat = QTime::currentTime(); }

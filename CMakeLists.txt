@@ -30,8 +30,7 @@ set(SOURCE_FILES
     src/main.cpp
     src/alsa_card.cpp
     src/alsa_card_model.cpp
-    src/alsa_mixer_model.cpp
-    src/osc_action.cpp
+    src/alsa_ctl.cpp
     src/osc_client.cpp
     src/osc_message.cpp
     src/osc_server.cpp
@@ -41,8 +40,7 @@ set(SOURCE_FILES
 set(HEADER_FILES
     include/alsa_card.h
     include/alsa_card_model.h
-    include/alsa_mixer_model.h
-    include/osc_action.h
+    include/alsa_ctl.h
     include/osc_client.h
     include/osc_message.h
     include/osc_server.h
@@ -72,4 +70,3 @@ TARGET_LINK_LIBRARIES ( ${PROGRAM_NAME}
   ${ALSA_LIBRARIES}
   udev
 )
-

@@ -7,49 +7,51 @@
 #include "osc_server.h"
 #include "sigwatch.h"
 
-int main(int argc, char* argv[])
-{
-    QCoreApplication a(argc, argv);
+int main(int argc, char *argv[]) {
+  QCoreApplication a(argc, argv);
 
-    qSetMessagePattern("[%{time} %{type}] %{function} - %{message}");
+  qSetMessagePattern("[%{time} %{type}] %{function} - %{message}");
 
-    QTranslator translator;
-    const QStringList uiLanguages = QLocale::system().uiLanguages();
-    for (const QString& locale : uiLanguages) {
-        qDebug() << QCoreApplication::tr("Trying to load language %1").arg(QLocale(locale).name());
+  QTranslator translator;
+  const QStringList uiLanguages = QLocale::system().uiLanguages();
+  for (const QString &locale : uiLanguages) {
+    qDebug() << QCoreApplication::tr("Trying to load language %1")
+                    .arg(QLocale(locale).name());
 
-        QString baseName = "elzac_" + QLocale(locale).name();
+    QString baseName = "elzac_" + QLocale(locale).name();
 
-        if (translator.load(":/i18n/" + baseName)) {
-            qDebug() << QCoreApplication::tr("Loaded language %1").arg(translator.language());
+    if (translator.load(":/i18n/" + baseName)) {
+      qDebug() << QCoreApplication::tr("Loaded language %1")
+                      .arg(translator.language());
 
-            a.installTranslator(&translator);
-            break;
-        }
+      a.installTranslator(&translator);
+      break;
     }
+  }
 
-    UnixSignalWatcher watcher;
+  UnixSignalWatcher watcher;
 
-    watcher.watchForSignal(SIGINT);
-    watcher.watchForSignal(SIGTERM);
+  watcher.watchForSignal(SIGINT);
+  watcher.watchForSignal(SIGTERM);
 
-    QObject::connect(&watcher, &UnixSignalWatcher::unixSignal, &a, &QCoreApplication::quit);
+  QObject::connect(&watcher, &UnixSignalWatcher::unixSignal, &a,
+                   &QCoreApplication::quit);
 
-    // TODO: read and write settings
-    /* Stored settings:
-        local ip addresses to listen to
-        local port
-    */
-    // TODO: implement cli to config program
+  // TODO: read and write settings
+  /* Stored settings:
+      local ip addresses to listen to
+      local port
+  */
+  // TODO: implement cli to config program
 
-    Osc::Server server;
+  Osc::Server server;
 
-    server.setPort(31032);
-    server.setEnabled(true);
+  server.setPort(31032);
+  server.setEnabled(true);
 
-    int result = a.exec();
+  int result = a.exec();
 
-    qInfo() << QCoreApplication::tr("Quitting elzac");
+  qInfo() << QCoreApplication::tr("Quitting elzac");
 
-    return result;
+  return result;
 }

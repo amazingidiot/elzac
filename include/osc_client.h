@@ -1,4 +1,5 @@
-#pragma once
+#ifndef OSC_CLIENT_H
+#define OSC_CLIENT_H
 
 #include <QHostAddress>
 #include <QTime>
@@ -6,17 +7,18 @@
 namespace Osc {
 class Client {
 public:
-    Client(QHostAddress address, quint16 port);
-    ~Client();
+  Client(QHostAddress address, quint16 port);
+  ~Client();
 
-    QHostAddress address();
-    quint16 port();
-    QTime heartbeat();
-    void setHeartbeat();
+  QHostAddress address();
+  quint16 port();
+  QTime heartbeat();
+  void setHeartbeat();
 
 private:
-    QHostAddress _address;
-    quint16 _port;
-    QTime _heartbeat;
+  QHostAddress _address;
+  quint16 _port;
+  QTime _heartbeat;
 };
 } // namespace Osc
+#endif
