@@ -61,11 +61,11 @@ Alsa::CardModel::CardModel(QObject *parent) {
                                                   0);
   udev_monitor_enable_receiving(_udev_monitor.get());
 
-  _udev_socket = new QSocketNotifier(udev_monitor_get_fd(_udev_monitor.get()),
-                                     QSocketNotifier::Read, this);
+  _udev_socket = std::shared_ptr<QSocketNotifier>(new QSocketNotifier(
+      udev_monitor_get_fd(_udev_monitor.get()), QSocketNotifier::Read));
 
-  connect(_udev_socket, &QSocketNotifier::activated, this,
-          &Alsa::CardModel::updateCards);
+  QObject::connect(_udev_socket.get(), &QSocketNotifier::activated, this,
+                   &Alsa::CardModel::updateCards);
 }
 
 Alsa::CardModel::~CardModel() {}

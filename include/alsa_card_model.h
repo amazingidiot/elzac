@@ -32,7 +32,7 @@ private:
   std::shared_ptr<udev> _udev;
   std::shared_ptr<udev_monitor> _udev_monitor;
 
-  QSocketNotifier *_udev_socket;
+  std::shared_ptr<QSocketNotifier> _udev_socket;
 
 public slots:
   void updateCards();

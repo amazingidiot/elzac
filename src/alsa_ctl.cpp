@@ -220,6 +220,38 @@ int Alsa::Ctl::Element::max() {
   return snd_ctl_elem_info_get_max(_snd_ctl_elem_info.get());
 }
 
+QVariant Alsa::Ctl::Element::valuedB(int channel) { return QVariant(); }
+
+QStringList Alsa::Ctl::Element::enum_list() {
+  int item_count = snd_ctl_elem_info_get_items(_snd_ctl_elem_info.get());
+
+  QStringList result;
+
+  for (int i = 0; i < item_count; i++) {
+    snd_ctl_elem_info_set_item(_snd_ctl_elem_info.get(), i);
+    snd_ctl_elem_info(_snd_ctl.get(), _snd_ctl_elem_info.get());
+
+    result.append(snd_ctl_elem_info_get_item_name(_snd_ctl_elem_info.get()));
+  }
+
+  return result;
+}
+
+QString Alsa::Ctl::Element::enum_name(int index) {
+  if (index < 0)
+    return "";
+
+  int item_count = snd_ctl_elem_info_get_items(_snd_ctl_elem_info.get());
+
+  if (index >= item_count)
+    return "";
+
+  snd_ctl_elem_info_set_item(_snd_ctl_elem_info.get(), index);
+  snd_ctl_elem_info(_snd_ctl.get(), _snd_ctl_elem_info.get());
+
+  return snd_ctl_elem_info_get_item_name(_snd_ctl_elem_info.get());
+}
+
 void Alsa::Ctl::ElementList::_socketActivated(QSocketDescriptor socket,
                                               QSocketNotifier::Type type) {
   qDebug() << tr("Socket was activated, type %1").arg(type);

@@ -55,6 +55,8 @@ public slots:
   void updateClientList();
 
   void endpoint_heartbeat(QHostAddress remote, quint16 remote_port);
+  void endpoint_element_subscribe(QHostAddress remote, quint16 remote_port, int card_index, int element_index, int frequency);
+  void endpoint_element_unsubscribe (QHostAddress remote, quint16 remote_port, int card_index, int element_index);
 
   void endpoint_cards(QHostAddress remote, quint16 remote_port);
 
@@ -72,6 +74,8 @@ public slots:
                                 int card_index);
   void endpoint_card_id(QHostAddress remote, quint16 remote_port,
                         int card_index);
+  void endpoint_card_sync(QHostAddress remote, quint16 remote_port,
+                          int card_index);
 
   void endpoint_element_count(QHostAddress remote, quint16 remote_port,
                               int card_index);
@@ -102,6 +106,11 @@ public slots:
                                    int card_index, int element_index);
   void endpoint_element_maximum_dB(QHostAddress remote, quint16 remote_port,
                                    int card_index, int element_index);
+  void endpoint_element_enum_list(QHostAddress remote, quint16 remote_port,
+                                  int card_index, int element_index);
+  void endpoint_element_enum_name(QHostAddress remote, quint16 remote_port,
+                                  int card_index, int element_index,
+                                  int enum_index);
 
 signals:
   void portChanged(quint16 value);

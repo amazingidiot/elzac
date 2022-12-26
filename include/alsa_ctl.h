@@ -28,6 +28,12 @@ public:
   bool isWritable();
   int min();
   int max();
+  QVariant valuedB(int channel = 0);
+  void setValuedB(QVariant value, int channel = 0);
+  int mindB();
+  int maxdB();
+  QStringList enum_list();
+  QString enum_name(int index);
 
 private:
   std::shared_ptr<snd_ctl_t> _snd_ctl;
