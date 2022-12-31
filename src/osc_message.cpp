@@ -1,4 +1,5 @@
 #include "osc_message.h"
+#include <memory>
 
 Osc::Message::Message(QNetworkDatagram *datagram) {
   this->address = QString(datagram->data().constData());
@@ -100,6 +101,21 @@ Osc::Message::Message(QHostAddress destinationAddress, quint16 destinationPort,
 Osc::Message::Message(QString address, QList<QVariant> values) {
   this->address = address;
   this->values = values;
+}
+
+std::shared_ptr<Osc::Message> Osc::Message::response() {
+  std::shared_ptr<Osc::Message> response(new Osc::Message(
+      this->sourceAddress, this->sourcePort, this->destinationAddress,
+      this->destinationPort, this->address, QList<QVariant>()));
+  return response;
+}
+
+std::shared_ptr<Osc::Message> Osc::Message::response(QString address) {
+  std::shared_ptr<Osc::Message> response = this->response();
+
+  response->address = address;
+
+  return response;
 }
 
 QString Osc::Message::format() {

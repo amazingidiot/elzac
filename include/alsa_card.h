@@ -1,5 +1,4 @@
-#ifndef ALSA_CARD_H
-#define ALSA_CARD_H
+#pragma once
 
 #include <QDebug>
 #include <QObject>
@@ -41,5 +40,3 @@ private:
   std::shared_ptr<snd_ctl_t> _snd_ctl;
 };
 } // namespace Alsa
-
-#endif

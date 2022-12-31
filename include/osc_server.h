@@ -1,5 +1,4 @@
-#ifndef OSC_SERVER_H
-#define OSC_SERVER_H
+#pragma once
 
 #include <QHash>
 #include <QList>
@@ -9,11 +8,29 @@
 #include <QTimer>
 #include <QUdpSocket>
 
+#include <functional>
+#include <memory>
+#include <qhostaddress.h>
+
 #include "alsa_card_model.h"
 #include "osc_client.h"
 #include "osc_message.h"
 
 namespace Osc {
+class Server;
+
+class Endpoint : public QObject {
+  Q_OBJECT
+
+public:
+  Endpoint(QRegularExpression pattern);
+  QRegularExpression pattern;
+
+signals:
+  bool received(std::shared_ptr<Osc::Message> received_message,
+                Osc::Server *server);
+};
+
 class Server : public QObject {
   Q_OBJECT
 
@@ -28,6 +45,8 @@ private:
   QTimer _heartbeat_timer;
 
   qint32 _client_heartbeat_timeout_seconds = 5;
+
+  QList<std::shared_ptr<Osc::Endpoint>> _endpoints;
 
 public:
   Server();
@@ -48,69 +67,50 @@ public slots:
   void
   sendElementUpdateToAllClients(std::shared_ptr<Alsa::Ctl::Element> element);
 
-  void sendOscMessage(Osc::Message *message);
-  void sendOscMessageToAllClients(Osc::Message *message);
+  void sendOscMessage(std::shared_ptr<Osc::Message> message);
+
   void sendOscMessageToAllClients(std::shared_ptr<Osc::Message> message);
 
   void updateClientList();
 
-  void endpoint_heartbeat(QHostAddress remote, quint16 remote_port);
-  void endpoint_element_subscribe(QHostAddress remote, quint16 remote_port, int card_index, int element_index, int frequency);
-  void endpoint_element_unsubscribe (QHostAddress remote, quint16 remote_port, int card_index, int element_index);
+  void endpoint_heartbeat(std::shared_ptr<Osc::Message> received_message);
 
-  void endpoint_cards(QHostAddress remote, quint16 remote_port);
+  void
+  endpoint_element_subscribe(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_unsubscribe(std::shared_ptr<Osc::Message> received_message);
 
-  void endpoint_card_all(QHostAddress remote, quint16 remote_port,
-                         int card_index);
-  void endpoint_card_name(QHostAddress remote, quint16 remote_port,
-                          int card_index);
-  void endpoint_card_long_name(QHostAddress remote, quint16 remote_port,
-                               int card_index);
-  void endpoint_card_mixer_name(QHostAddress remote, quint16 remote_port,
-                                int card_index);
-  void endpoint_card_driver(QHostAddress remote, quint16 remote_port,
-                            int card_index);
-  void endpoint_card_components(QHostAddress remote, quint16 remote_port,
-                                int card_index);
-  void endpoint_card_id(QHostAddress remote, quint16 remote_port,
-                        int card_index);
-  void endpoint_card_sync(QHostAddress remote, quint16 remote_port,
-                          int card_index);
+  void endpoint_cards(std::shared_ptr<Osc::Message> received_message);
 
-  void endpoint_element_count(QHostAddress remote, quint16 remote_port,
-                              int card_index);
-  void endpoint_element_by_name(QHostAddress remote, quint16 remote_port,
-                                int card_index, QString element_name);
-  void endpoint_element_all(QHostAddress remote, quint16 remote_port,
-                            int card_index, int element_index);
+  void endpoint_card_name(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_card_long_name(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_card_mixer_name(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_card_driver(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_card_components(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_card_id(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_card_sync(std::shared_ptr<Osc::Message> received_message);
 
-  void endpoint_element_name(QHostAddress remote, quint16 remote_port,
-                             int card_index, int element_index);
-  void endpoint_element_type(QHostAddress remote, quint16 remote_port,
-                             int card_index, int element_index);
-  void endpoint_element_value(QHostAddress remote, quint16 remote_port,
-                              int card_index, int element_index);
-  void endpoint_element_value(QHostAddress remote, quint16 remote_port,
-                              int card_index, int element_index, int value);
-  void endpoint_element_minimum(QHostAddress remote, quint16 remote_port,
-                                int card_index, int element_index);
-  void endpoint_element_maximum(QHostAddress remote, quint16 remote_port,
-                                int card_index, int element_index);
-  void endpoint_element_readable(QHostAddress remote, quint16 remote_port,
-                                 int card_index, int element_index);
-  void endpoint_element_writable(QHostAddress remote, quint16 remote_port,
-                                 int card_index, int element_index);
-  void endpoint_element_value_dB(QHostAddress remote, quint16 remote_port,
-                                 int card_index, int element_index);
-  void endpoint_element_minimum_dB(QHostAddress remote, quint16 remote_port,
-                                   int card_index, int element_index);
-  void endpoint_element_maximum_dB(QHostAddress remote, quint16 remote_port,
-                                   int card_index, int element_index);
-  void endpoint_element_enum_list(QHostAddress remote, quint16 remote_port,
-                                  int card_index, int element_index);
-  void endpoint_element_enum_name(QHostAddress remote, quint16 remote_port,
-                                  int card_index, int element_index,
-                                  int enum_index);
+  void endpoint_element_count(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_element_by_name(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_element_name(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_element_type(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_element_value(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_element_minimum(std::shared_ptr<Osc::Message> received_message);
+  void endpoint_element_maximum(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_readable(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_writable(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_value_dB(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_minimum_dB(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_maximum_dB(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_enum_list(std::shared_ptr<Osc::Message> received_message);
+  void
+  endpoint_element_enum_name(std::shared_ptr<Osc::Message> received_message);
 
 signals:
   void portChanged(quint16 value);
@@ -118,5 +118,3 @@ signals:
 };
 
 } // namespace Osc
-
-#endif

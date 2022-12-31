@@ -72,6 +72,9 @@ Alsa::CardModel::~CardModel() {}
 
 QList<int> Alsa::CardModel::cards() { return _cards.keys(); }
 
+bool Alsa::CardModel::contains(int index) {
+  return _cards.keys().contains(index);
+}
 std::shared_ptr<Alsa::Card> Alsa::CardModel::card(int index) {
   if (_cards.contains(index)) {
     return _cards[index];

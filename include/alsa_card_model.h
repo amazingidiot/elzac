@@ -1,5 +1,4 @@
-#ifndef ALSA_CARD_MODEL_H
-#define ALSA_CARD_MODEL_H
+#pragma once
 
 #include <QAbstractListModel>
 #include <QList>
@@ -19,6 +18,7 @@ public:
 
   QList<int> cards();
   std::shared_ptr<Alsa::Card> card(int index);
+  bool contains(int index);
   int cardCount();
 
 signals:
@@ -38,4 +38,3 @@ public slots:
   void updateCards();
 };
 } // namespace Alsa
-#endif

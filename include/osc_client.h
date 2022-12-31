@@ -1,5 +1,4 @@
-#ifndef OSC_CLIENT_H
-#define OSC_CLIENT_H
+#pragma once
 
 #include <QHostAddress>
 #include <QTime>
@@ -22,11 +21,11 @@ public:
 private:
   class Subscription {
   public:
-      Subscription(int card_index, int element_index, int frequency);
-      QTimer timer;
-      int element_index;
-      int card_index;
-      int frequency;
+    Subscription(int card_index, int element_index, int frequency);
+    QTimer timer;
+    int element_index;
+    int card_index;
+    int frequency;
   };
 
   QHostAddress _address;
@@ -35,4 +34,3 @@ private:
   QList<Subscription> _subscriptions;
 };
 } // namespace Osc
-#endif

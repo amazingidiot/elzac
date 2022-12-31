@@ -47,7 +47,7 @@ set(HEADER_FILES
     include/sigwatch.h
 )
 
-include_directories(include/)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_executable(${PROGRAM_NAME}
   ${SOURCE_FILES}

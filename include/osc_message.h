@@ -1,11 +1,11 @@
-#ifndef OSC_MESSAGE_H
-#define OSC_MESSAGE_H
+#pragma once
 
 #include <QByteArray>
 #include <QHostAddress>
 #include <QList>
 #include <QNetworkDatagram>
 #include <QVariant>
+#include <memory>
 
 namespace Osc {
 class Message {
@@ -15,6 +15,9 @@ public:
           QHostAddress sourceAddress, quint16 sourcePort, QString address,
           QList<QVariant> values);
   Message(QString address, QList<QVariant> values);
+
+  std::shared_ptr<Osc::Message> response();
+  std::shared_ptr<Osc::Message> response(QString address);
 
   QHostAddress sourceAddress;
   quint16 sourcePort;
@@ -32,5 +35,3 @@ public:
   QString toString();
 };
 } // namespace Osc
-
-#endif

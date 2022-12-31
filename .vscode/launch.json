@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [
+        "-enable-pretty-printing"
+      ],
+      "cwd": "/home/oliver/Distrobox/QtCreator/elzac",
+      "program": "/home/oliver/Distrobox/QtCreator/elzac/build/elzac",
+    }
+  ]
+}

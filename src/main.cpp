@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]) {
   QCoreApplication a(argc, argv);
 
-  qSetMessagePattern("[%{time} %{type}] %{function} - %{message}");
+  qSetMessagePattern("[%{time} %{type}] %{message}");
 
   QTranslator translator;
   const QStringList uiLanguages = QLocale::system().uiLanguages();

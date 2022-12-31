@@ -45,7 +45,6 @@ Alsa::Ctl::ElementList::ElementList(std::shared_ptr<snd_ctl_t> snd_ctl) {
     qDebug() << tr("Got %1 pollfds").arg(_pollfds.length());
 
     foreach (pollfd fd, _pollfds) {
-
       if (fd.fd != 0) {
         std::shared_ptr<QSocketNotifier> sn(
             new QSocketNotifier(fd.fd, QSocketNotifier::Read, this));
@@ -221,6 +220,11 @@ int Alsa::Ctl::Element::max() {
 }
 
 QVariant Alsa::Ctl::Element::valuedB(int channel) { return QVariant(); }
+void Alsa::Ctl::Element::setValuedB(QVariant value, int channel){};
+
+// TODO: Implement mindB and maxdB
+int Alsa::Ctl::Element::mindB() { return 0; }
+int Alsa::Ctl::Element::maxdB() { return 1; }
 
 QStringList Alsa::Ctl::Element::enum_list() {
   int item_count = snd_ctl_elem_info_get_items(_snd_ctl_elem_info.get());

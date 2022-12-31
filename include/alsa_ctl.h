@@ -1,5 +1,4 @@
-#ifndef ALSA_CTL_H
-#define ALSA_CTL_H
+#pragma once
 
 #include <QList>
 #include <QObject>
@@ -69,4 +68,3 @@ private slots:
 };
 } // namespace Ctl
 } // namespace Alsa
-#endif

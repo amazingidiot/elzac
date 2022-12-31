@@ -15,17 +15,16 @@ QTime Osc::Client::heartbeat() { return _heartbeat; }
 
 void Osc::Client::setHeartbeat() { this->_heartbeat = QTime::currentTime(); }
 
-void Osc::Client::addSubscription(int card_index, int element_index, int frequency)
-{
-// TODO: Implement adding a subscription to an element
+void Osc::Client::addSubscription(int card_index, int element_index,
+                                  int frequency) {
+  // TODO: Implement adding a subscription to an element
 }
 
-void Osc::Client::removeSubscription(int card_index, int element_index)
-{
-// TODO: Implement removing an existing subscription to an element
+void Osc::Client::removeSubscription(int card_index, int element_index) {
+  // TODO: Implement removing an existing subscription to an element
 }
 
-Osc::Client::Subscription::Subscription(int card_index, int element_index, int frequency)
-{
-// TODO: Implement constructor of a subscription object
+Osc::Client::Subscription::Subscription(int card_index, int element_index,
+                                        int frequency) {
+  // TODO: Implement constructor of a subscription object
 }

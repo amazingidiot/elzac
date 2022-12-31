@@ -1,7 +1,14 @@
 #include "osc_server.h"
+#include "alsa_card_model.h"
+#include "osc_client.h"
+#include "osc_message.h"
 
 #include <QDebug>
+#include <QtConcurrent/QtConcurrent>
+#include <QtConcurrent/QtConcurrentFilter>
 #include <memory>
+
+Osc::Endpoint::Endpoint(QRegularExpression pattern) { this->pattern = pattern; }
 
 Osc::Server::Server() {
   qDebug() << tr("Starting server");
@@ -12,6 +19,215 @@ Osc::Server::Server() {
                            &Osc::Server::updateClientList);
 
   _heartbeat_timer.start();
+
+// Setting up endpoints
+#pragma region
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/heartbeat$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_heartbeat);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/cards$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_cards);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/all$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_id);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_name);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_mixer_name);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_driver);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_components);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_long_name);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/id$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_id);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/name$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_name);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/longname$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_long_name);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/mixername$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_mixer_name);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/driver$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_driver);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/components$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_components);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/card/sync$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_card_sync);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/elements$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_count);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/by-name$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_by_name);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/all$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_name);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_type);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_value);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_minimum);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_maximum);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_readable);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_writable);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_value_dB);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_minimum_dB);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_maximum_dB);
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_enum_list);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/name$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_name);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/type$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_type);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/value$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_value);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/minimum$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_minimum);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/maximum$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_maximum);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/readable$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_readable);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/writable$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_writable);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/db/value$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_value_dB);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/db/minimum$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_minimum_dB);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/db/maximum$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_maximum_dB);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/enum/list$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_enum_list);
+    _endpoints.append(endpoint);
+  }
+  {
+    std::shared_ptr<Osc::Endpoint> endpoint(
+        new Osc::Endpoint(QRegularExpression("^/element/enum/name$")));
+    QObject::connect(endpoint.get(), &Osc::Endpoint::received, this,
+                     &Osc::Server::endpoint_element_enum_name);
+    _endpoints.append(endpoint);
+  }
+#pragma endregion
 
   _socket = new QUdpSocket(this);
 
@@ -67,182 +283,15 @@ void Osc::Server::receiveDatagram() {
   while (_socket->hasPendingDatagrams()) {
     QNetworkDatagram datagram = _socket->receiveDatagram();
 
-    std::unique_ptr<Osc::Message> received_message(new Osc::Message(&datagram));
+    std::shared_ptr<Osc::Message> received_message(new Osc::Message(&datagram));
 
     qDebug() << received_message->toString();
 
-    if ((received_message->address == "/heartbeat") &&
-        (received_message->format() == "")) {
-      endpoint_heartbeat(received_message->sourceAddress,
-                         received_message->sourcePort);
-    }
-    if ((received_message->address == "/cards") &&
-        (received_message->format() == "")) {
-      endpoint_cards(received_message->sourceAddress,
-                     received_message->sourcePort);
-    }
-
-    if ((received_message->address == "/card/all") &&
-        (received_message->format() == "i")) {
-      endpoint_card_all(received_message->sourceAddress,
-                        received_message->sourcePort,
-                        received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/card/id") &&
-        (received_message->format() == "i")) {
-      endpoint_card_id(received_message->sourceAddress,
-                       received_message->sourcePort,
-                       received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/card/name") &&
-        (received_message->format() == "i")) {
-      endpoint_card_name(received_message->sourceAddress,
-                         received_message->sourcePort,
-                         received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/card/longname") &&
-        (received_message->format() == "i")) {
-      endpoint_card_long_name(received_message->sourceAddress,
-                              received_message->sourcePort,
-                              received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/card/mixername") &&
-        (received_message->format() == "i")) {
-      endpoint_card_mixer_name(received_message->sourceAddress,
-                               received_message->sourcePort,
-                               received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/card/driver") &&
-        (received_message->format() == "i")) {
-      endpoint_card_driver(received_message->sourceAddress,
-                           received_message->sourcePort,
-                           received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/card/components") &&
-        (received_message->format() == "i")) {
-      endpoint_card_components(received_message->sourceAddress,
-                               received_message->sourcePort,
-                               received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/card/sync") &&
-        (received_message->format() == "i")) {
-      endpoint_card_sync(received_message->sourceAddress,
-                         received_message->sourcePort,
-                         received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/elements") &&
-        (received_message->format() == "i")) {
-      endpoint_element_count(received_message->sourceAddress,
-                             received_message->sourcePort,
-                             received_message->values[0].toInt());
-    }
-    if ((received_message->address == "/element/by-name") &&
-        (received_message->format() == "is")) {
-      endpoint_element_by_name(received_message->sourceAddress,
-                               received_message->sourcePort,
-                               received_message->values[0].toInt(),
-                               received_message->values[1].toString());
-    }
-    if ((received_message->address == "/element/all") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_all(received_message->sourceAddress,
-                           received_message->sourcePort,
-                           received_message->values[0].toInt(),
-                           received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/name") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_name(received_message->sourceAddress,
-                            received_message->sourcePort,
-                            received_message->values[0].toInt(),
-                            received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/type") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_type(received_message->sourceAddress,
-                            received_message->sourcePort,
-                            received_message->values[0].toInt(),
-                            received_message->values[1].toInt());
-    }
-    if (received_message->address == "/element/value") {
-      if (received_message->format() == "ii") {
-        endpoint_element_value(received_message->sourceAddress,
-                               received_message->sourcePort,
-                               received_message->values[0].toInt(),
-                               received_message->values[1].toInt());
+    // TODO: Replace _endpoints with concurrently filtered list
+    foreach (std::shared_ptr<Osc::Endpoint> endpoint, _endpoints) {
+      if (endpoint->pattern.match(received_message->address).hasMatch()) {
+        emit endpoint->received(received_message, this);
       }
-      if (received_message->format() == "iii") {
-        endpoint_element_value(received_message->sourceAddress,
-                               received_message->sourcePort,
-                               received_message->values[0].toInt(),
-                               received_message->values[1].toInt(),
-                               received_message->values[2].toInt());
-      }
-    }
-    if ((received_message->address == "/element/minimum") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_minimum(received_message->sourceAddress,
-                               received_message->sourcePort,
-                               received_message->values[0].toInt(),
-                               received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/maximum") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_maximum(received_message->sourceAddress,
-                               received_message->sourcePort,
-                               received_message->values[0].toInt(),
-                               received_message->values[1].toInt());
-    }
-
-    if ((received_message->address == "/element/readable") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_readable(received_message->sourceAddress,
-                                received_message->sourcePort,
-                                received_message->values[0].toInt(),
-                                received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/writable") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_writable(received_message->sourceAddress,
-                                received_message->sourcePort,
-                                received_message->values[0].toInt(),
-                                received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/db/value") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_value_dB(received_message->sourceAddress,
-                                received_message->sourcePort,
-                                received_message->values[0].toInt(),
-                                received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/db/minimum") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_minimum_dB(received_message->sourceAddress,
-                                  received_message->sourcePort,
-                                  received_message->values[0].toInt(),
-                                  received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/db/maximum") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_maximum_dB(received_message->sourceAddress,
-                                  received_message->sourcePort,
-                                  received_message->values[0].toInt(),
-                                  received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/enum/list") &&
-        (received_message->format() == "ii")) {
-      endpoint_element_enum_list(received_message->sourceAddress,
-                                 received_message->sourcePort,
-                                 received_message->values[0].toInt(),
-                                 received_message->values[1].toInt());
-    }
-    if ((received_message->address == "/element/enum/name") &&
-        (received_message->format() == "iii")) {
-      endpoint_element_enum_name(received_message->sourceAddress,
-                                 received_message->sourcePort,
-                                 received_message->values[0].toInt(),
-                                 received_message->values[1].toInt(),
-                                 received_message->values[2].toInt());
     }
   }
 }
@@ -256,6 +305,9 @@ void Osc::Server::handleNewCard(std::shared_ptr<Alsa::Card> card) {
 
 void Osc::Server::sendElementUpdateToAllClients(
     std::shared_ptr<Alsa::Ctl::Element> element) {
+  qDebug() << tr("Sending update of element %1:%2")
+                  .arg(element->card_index())
+                  .arg(element->id());
 
   QList<QVariant> values;
 
@@ -263,17 +315,18 @@ void Osc::Server::sendElementUpdateToAllClients(
   values.append(element->id());
   values.append(element->value());
 
-  Osc::Message message("/element/value", values);
+  std::shared_ptr<Osc::Message> message(
+      new Osc::Message("/element/value", values));
 
-  this->sendOscMessageToAllClients(&message);
+  this->sendOscMessageToAllClients(message);
 }
 
-void Osc::Server::sendOscMessage(Osc::Message *message) {
+void Osc::Server::sendOscMessage(std::shared_ptr<Osc::Message> message) {
   qDebug() << message->toString();
 
   QNetworkDatagram datagram;
 
-  datagram.setSender(message->sourceAddress, message->sourcePort);
+  datagram.setSender(_socket->localAddress(), _socket->localPort());
   datagram.setDestination(message->destinationAddress,
                           message->destinationPort);
 
@@ -282,20 +335,17 @@ void Osc::Server::sendOscMessage(Osc::Message *message) {
   _socket->writeDatagram(datagram);
 }
 
-void Osc::Server::sendOscMessageToAllClients(Osc::Message *message) {
-  Osc::Message _message = *message;
-
-  foreach (std::shared_ptr<Osc::Client> client, _clients) {
-    _message.destinationAddress = client->address();
-    _message.destinationPort = client->port();
-
-    this->sendOscMessage(&_message);
-  }
-}
-
 void Osc::Server::sendOscMessageToAllClients(
     std::shared_ptr<Osc::Message> message) {
-  sendOscMessageToAllClients(message.get());
+  std::shared_ptr<Osc::Message> client_message(
+      new Osc::Message(message->address, message->values));
+
+  foreach (std::shared_ptr<Osc::Client> client, _clients) {
+    client_message->destinationAddress = client->address();
+    client_message->destinationPort = client->port();
+
+    this->sendOscMessage(client_message);
+  }
 }
 
 void Osc::Server::updateClientList() {
@@ -315,612 +365,735 @@ void Osc::Server::updateClientList() {
   }
 }
 
-void Osc::Server::endpoint_heartbeat(QHostAddress remote, quint16 remote_port) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/heartbeat",
-                        QList<QVariant>());
+void Osc::Server::endpoint_heartbeat(
+    std::shared_ptr<Osc::Message> received_message) {
+  std::shared_ptr<Osc::Message> response = received_message->response();
 
-  bool new_client = true;
+  for (int i = 0; i < _clients.count(); i++) {
+    std::shared_ptr<Osc::Client> client = _clients.at(i);
 
-  QMutableListIterator<std::shared_ptr<Osc::Client>> clients_iter(
-      this->_clients);
-  while (clients_iter.hasNext()) {
-    std::shared_ptr<Osc::Client> client = clients_iter.next();
+    sendOscMessage(response);
 
-    if ((client->address().isEqual(remote)) &&
-        (client->port() == remote_port)) {
+    if (client->address().isEqual(received_message->sourceAddress) &&
+        (client->port() == received_message->sourcePort)) {
       client->setHeartbeat();
-      new_client = false;
-      break;
-    }
-  };
 
-  if (new_client) {
-    qInfo() << tr("New client connected at %1:%2")
-                   .arg(remote.toString())
-                   .arg(remote_port);
-    this->_clients.append(
-        std::shared_ptr<Osc::Client>(new Osc::Client(remote, remote_port)));
+      return;
+    }
   }
 
-  this->sendOscMessage(&response);
+  qInfo() << tr("New client connected at %1:%2")
+                 .arg(received_message->sourceAddress.toString())
+                 .arg(received_message->sourcePort);
+  _clients.append(std::shared_ptr<Osc::Client>(new Osc::Client(
+      received_message->sourceAddress, received_message->sourcePort)));
 }
 
-void Osc::Server::endpoint_cards(QHostAddress remote, quint16 remote_port) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/cards",
-                        QList<QVariant>());
+void Osc::Server::endpoint_element_subscribe(
+    std::shared_ptr<Osc::Message> received_message) {}
+
+void Osc::Server::endpoint_element_unsubscribe(
+    std::shared_ptr<Osc::Message> received_message) {}
+
+void Osc::Server::endpoint_cards(
+    std::shared_ptr<Osc::Message> received_message) {
+  std::shared_ptr<Osc::Message> response = received_message->response("/cards");
 
   foreach (int card, _cardmodel->cards()) {
-    response.values.append(card);
+    response->values.append(card);
   }
 
-  this->sendOscMessage(&response);
+  sendOscMessage(response);
 }
 
-void Osc::Server::endpoint_card_all(QHostAddress remote, quint16 remote_port,
-                                    int card_index) {
-  endpoint_card_id(remote, remote_port, card_index);
-  endpoint_card_name(remote, remote_port, card_index);
-  endpoint_card_long_name(remote, remote_port, card_index);
-  endpoint_card_mixer_name(remote, remote_port, card_index);
-  endpoint_card_driver(remote, remote_port, card_index);
-  endpoint_card_components(remote, remote_port, card_index);
-}
+void Osc::Server::endpoint_card_name(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/card/name");
 
-void Osc::Server::endpoint_card_name(QHostAddress remote, quint16 remote_port,
-                                     int card_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/card/name",
-                        QList<QVariant>());
+    int card_index = received_message->values[0].toInt();
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
 
-  response.values.append(card_index);
-  response.values.append(card->name());
+    response->values.append(card_index);
+    response->values.append(card->name());
 
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_card_long_name(QHostAddress remote,
-                                          quint16 remote_port, int card_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/card/longname",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(card->longName());
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_card_mixer_name(QHostAddress remote,
-                                           quint16 remote_port,
-                                           int card_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/card/mixername",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(card->mixerName());
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_card_driver(QHostAddress remote, quint16 remote_port,
-                                       int card_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/card/driver",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(card->driver());
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_card_components(QHostAddress remote,
-                                           quint16 remote_port,
-                                           int card_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/card/components",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(card->components());
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_card_id(QHostAddress remote, quint16 remote_port,
-                                   int card_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/card/id",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(card->id());
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_card_sync(QHostAddress remote, quint16 remote_port,
-                                     int card_index) {
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  for (int i = 0; i < card->elementList()->count(); i++) {
-    endpoint_element_all(remote, remote_port, card_index, i);
+    sendOscMessage(response);
   }
 }
 
-void Osc::Server::endpoint_element_count(QHostAddress remote,
-                                         quint16 remote_port, int card_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/elements",
-                        QList<QVariant>());
+void Osc::Server::endpoint_card_long_name(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/card/longname");
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    int card_index = received_message->values[0].toInt();
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
 
-  response.values.append(card_index);
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
 
-  response.values.append(card->elementList()->count());
+    response->values.append(card_index);
+    response->values.append(card->longName());
 
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_element_name(QHostAddress remote,
-                                        quint16 remote_port, int card_index,
-                                        int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/name",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-  response.values.append(element->name());
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_element_type(QHostAddress remote,
-                                        quint16 remote_port, int card_index,
-                                        int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/type",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-  response.values.append(element->type());
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_element_value(QHostAddress remote,
-                                         quint16 remote_port, int card_index,
-                                         int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/value",
-                        QList<QVariant>());
-
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-
-  qDebug() << tr("Requested element %1 has %2 channels")
-                  .arg(element_index)
-                  .arg(element->channel_count());
-
-  for (int i = 0; i < element->channel_count(); i++) {
-    response.values.append(element->value(i));
-  }
-
-  this->sendOscMessage(&response);
-}
-
-void Osc::Server::endpoint_element_value(QHostAddress remote,
-                                         quint16 remote_port, int card_index,
-                                         int element_index, int value) {
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
-
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
-  }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  qDebug() << tr("Setting element %1 to %2").arg(element_index).arg(value);
-
-  for (int i = 0; i < element->channel_count(); i++) {
-    element->setValue(value, i);
+    sendOscMessage(response);
   }
 }
 
-void Osc::Server::endpoint_element_minimum(QHostAddress remote,
-                                           quint16 remote_port, int card_index,
-                                           int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/minimum",
-                        QList<QVariant>());
+void Osc::Server::endpoint_card_mixer_name(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/card/mixername");
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    int card_index = received_message->values[0].toInt();
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(card->mixerName());
+
+    sendOscMessage(response);
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-  response.values.append(element->min());
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_maximum(QHostAddress remote,
-                                           quint16 remote_port, int card_index,
-                                           int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/maximum",
-                        QList<QVariant>());
+void Osc::Server::endpoint_card_driver(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/card/driver");
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    int card_index = received_message->values[0].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(card->driver());
+
+    sendOscMessage(response);
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-  response.values.append(element->max());
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_readable(QHostAddress remote,
-                                            quint16 remote_port, int card_index,
-                                            int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/readable",
-                        QList<QVariant>());
+void Osc::Server::endpoint_card_components(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/card/components");
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    int card_index = received_message->values[0].toInt();
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(card->components());
+
+    sendOscMessage(response);
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-  response.values.append(element->isReadable());
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_writable(QHostAddress remote,
-                                            quint16 remote_port, int card_index,
-                                            int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/writable",
-                        QList<QVariant>());
+void Osc::Server::endpoint_card_id(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/card/id");
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    int card_index = received_message->values[0].toInt();
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(card->id());
+
+    sendOscMessage(response);
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-  response.values.append(element->isWritable());
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_value_dB(QHostAddress remote,
-                                            quint16 remote_port, int card_index,
-                                            int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/db/value",
-                        QList<QVariant>());
+void Osc::Server::endpoint_card_sync(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
+    int card_index = received_message->values[0].toInt();
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+
+    std::shared_ptr<Osc::Message> element_message(
+        new Osc::Message("/element/all", QList<QVariant>()));
+    element_message->sourceAddress = received_message->sourceAddress;
+    element_message->sourcePort = received_message->sourcePort;
+
+    element_message->values.append(card_index);
+    element_message->values.append(0);
+
+    for (int i = 0; i < card->elementList()->count(); i++) {
+      element_message->values[1] = i;
+
+      endpoint_element_name(element_message);
+      endpoint_element_type(element_message);
+      endpoint_element_value(element_message);
+      endpoint_element_minimum(element_message);
+      endpoint_element_maximum(element_message);
+      endpoint_element_readable(element_message);
+      endpoint_element_writable(element_message);
+      endpoint_element_value_dB(element_message);
+      endpoint_element_minimum_dB(element_message);
+      endpoint_element_maximum_dB(element_message);
+      endpoint_element_enum_list(element_message);
+    }
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-
-  qDebug() << tr("Requested element %1 has %2 channels")
-                  .arg(element_index)
-                  .arg(element->channel_count());
-
-  for (int i = 0; i < element->channel_count(); i++) {
-    response.values.append(element->value(i));
-  }
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_minimum_dB(QHostAddress remote,
-                                              quint16 remote_port,
-                                              int card_index,
-                                              int element_index) {}
+void Osc::Server::endpoint_element_count(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "i") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/count");
 
-void Osc::Server::endpoint_element_maximum_dB(QHostAddress remote,
-                                              quint16 remote_port,
-                                              int card_index,
-                                              int element_index) {}
+    int card_index = received_message->values[0].toInt();
 
-void Osc::Server::endpoint_element_enum_list(QHostAddress remote,
-                                             quint16 remote_port,
-                                             int card_index,
-                                             int element_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/enum/list",
-                        QList<QVariant>());
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    response->values.append(card_index);
+
+    response->values.append(card->elementList()->count());
+
+    sendOscMessage(response);
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  if (element->type() != 3) {
-    qWarning()
-        << tr("Element %1:%2 is no enum").arg(card_index).arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-
-  foreach (QString value, element->enum_list()) {
-    response.values.append(value);
-  }
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_enum_name(QHostAddress remote,
-                                             quint16 remote_port,
-                                             int card_index, int element_index,
-                                             int enum_index) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/enum/name",
-                        QList<QVariant>());
+void Osc::Server::endpoint_element_name(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/name");
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->name());
+
+    sendOscMessage(response);
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByID(element_index);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with id '%1' not found").arg(element_index);
-    return;
-  }
-
-  if (element->type() != 3) {
-    qWarning()
-        << tr("Element %1:%2 is no enum").arg(card_index).arg(element_index);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_index);
-
-  response.values.append(element->enum_name(enum_index));
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_by_name(QHostAddress remote,
-                                           quint16 remote_port, int card_index,
-                                           QString element_name) {
-  Osc::Message response(remote, remote_port, this->_socket->localAddress(),
-                        this->_socket->localPort(), "/element/by-name",
-                        QList<QVariant>());
+void Osc::Server::endpoint_element_type(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/type");
 
-  std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
 
-  if (card.get() == nullptr) {
-    qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
-    return;
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->type());
+
+    sendOscMessage(response);
   }
-
-  std::shared_ptr<Alsa::Ctl::Element> element =
-      card->elementList()->getByName(element_name);
-
-  if (element.get() == nullptr) {
-    qWarning()
-        << tr("Requested element with name '%1' not found").arg(element_name);
-    return;
-  }
-
-  response.values.append(card_index);
-  response.values.append(element_name);
-  response.values.append(element->id());
-
-  this->sendOscMessage(&response);
 }
 
-void Osc::Server::endpoint_element_all(QHostAddress remote, quint16 remote_port,
-                                       int card_index, int element_index) {
-  endpoint_element_name(remote, remote_port, card_index, element_index);
-  endpoint_element_type(remote, remote_port, card_index, element_index);
-  endpoint_element_value(remote, remote_port, card_index, element_index);
-  endpoint_element_minimum(remote, remote_port, card_index, element_index);
-  endpoint_element_maximum(remote, remote_port, card_index, element_index);
+void Osc::Server::endpoint_element_value(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/value");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+
+    qDebug() << tr("Requested element %1 has %2 channels")
+                    .arg(element_index)
+                    .arg(element->channel_count());
+
+    for (int i = 0; i < element->channel_count(); i++) {
+      response->values.append(element->value(i));
+    }
+    sendOscMessage(response);
+  } else if (received_message->format() == "iii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/value");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+    int value = received_message->values[2].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    qDebug() << tr("Setting element %1 to %2").arg(element_index).arg(value);
+
+    for (int i = 0; i < element->channel_count(); i++) {
+      element->setValue(value, i);
+    }
+  }
+}
+
+void Osc::Server::endpoint_element_minimum(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/minimum");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->min());
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_maximum(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/maximum");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->max());
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_readable(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/readable");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->isReadable());
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_writable(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/writable");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->isWritable());
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_value_dB(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/db/value");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+
+    qDebug() << tr("Requested element %1 has %2 channels")
+                    .arg(element_index)
+                    .arg(element->channel_count());
+
+    for (int i = 0; i < element->channel_count(); i++) {
+      response->values.append(element->valuedB(i));
+    }
+    sendOscMessage(response);
+  } else if (received_message->format() == "iii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/db/value");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+    int value = received_message->values[2].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    qDebug() << tr("Setting element %1 to %2").arg(element_index).arg(value);
+
+    for (int i = 0; i < element->channel_count(); i++) {
+      element->setValuedB(value, i);
+    }
+  }
+}
+
+void Osc::Server::endpoint_element_minimum_dB(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/db/minimum");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->mindB());
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_maximum_dB(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/db/maximum");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    response->values.append(element->maxdB());
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_enum_list(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "ii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/enum/list");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+    foreach (QString value, element->enum_list()) {
+      response->values.append(value);
+    }
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_enum_name(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "iii") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/enum/name");
+
+    int card_index = received_message->values[0].toInt();
+    int element_index = received_message->values[1].toInt();
+    int enum_index = received_message->values[2].toInt();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByID(element_index);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with id '%1' not found").arg(element_index);
+      return;
+    }
+
+    if (element->type() != 3) {
+      qWarning()
+          << tr("Element %1:%2 is no enum").arg(card_index).arg(element_index);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_index);
+
+    response->values.append(element->enum_name(enum_index));
+
+    sendOscMessage(response);
+  }
+}
+
+void Osc::Server::endpoint_element_by_name(
+    std::shared_ptr<Osc::Message> received_message) {
+  if (received_message->format() == "is") {
+    std::shared_ptr<Osc::Message> response =
+        received_message->response("/element/by-name");
+
+    int card_index = received_message->values[0].toInt();
+    QString element_name = received_message->values[1].toString();
+
+    std::shared_ptr<Alsa::Card> card = _cardmodel->card(card_index);
+
+    if (card.get() == nullptr) {
+      qWarning() << tr("Requested card index %1 is invalid").arg(card_index);
+      return;
+    }
+    std::shared_ptr<Alsa::Ctl::Element> element =
+        card->elementList()->getByName(element_name);
+
+    if (element.get() == nullptr) {
+      qWarning()
+          << tr("Requested element with name '%1' not found").arg(element_name);
+      return;
+    }
+
+    response->values.append(card_index);
+    response->values.append(element_name);
+    response->values.append(element->id());
+
+    sendOscMessage(response);
+  }
 }
