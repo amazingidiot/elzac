@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <memory>
+#include <qglobal.h>
 #include <qhostaddress.h>
 
 #include "alsa_card_model.h"
@@ -28,23 +29,25 @@ public:
 
 signals:
   bool received(std::shared_ptr<Osc::Message> received_message,
-                Osc::Server *server);
+                Osc::Server* server);
 };
 
 class Server : public QObject {
   Q_OBJECT
 
 private:
-  Alsa::CardModel *_cardmodel;
+  Alsa::CardModel* _cardmodel;
 
-  QUdpSocket *_socket;
+  QUdpSocket* _socket;
   bool _enabled = false;
   quint16 _port = 1;
 
   QList<std::shared_ptr<Osc::Client>> _clients;
   QTimer _heartbeat_timer;
+  QTimer _subscription_timer;
 
   qint32 _client_heartbeat_timeout_seconds = 5;
+  qint32 _subscription_update_frequency = 15;
 
   QList<std::shared_ptr<Osc::Endpoint>> _endpoints;
 
@@ -72,6 +75,7 @@ public slots:
   void sendOscMessageToAllClients(std::shared_ptr<Osc::Message> message);
 
   void updateClientList();
+  void sendSubscriptionUpdates();
 
   void endpoint_heartbeat(std::shared_ptr<Osc::Message> received_message);
 
@@ -79,6 +83,9 @@ public slots:
   endpoint_element_subscribe(std::shared_ptr<Osc::Message> received_message);
   void
   endpoint_element_unsubscribe(std::shared_ptr<Osc::Message> received_message);
+
+  void endpoint_element_subscription_timer(std::shared_ptr<Osc::Client> client,
+                                           int card_index, int element_index);
 
   void endpoint_cards(std::shared_ptr<Osc::Message> received_message);
 

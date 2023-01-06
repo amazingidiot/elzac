@@ -6,7 +6,7 @@
 #include "alsa/asoundlib.h"
 
 Alsa::Card::Card(int index) {
-  snd_ctl_t *_snd_ctl_ptr = nullptr;
+  snd_ctl_t* _snd_ctl_ptr = nullptr;
 
   int result_snd_ctl_open = snd_ctl_open(
       &_snd_ctl_ptr, QString("hw:%1").arg(index).toLocal8Bit().constData(),
@@ -21,7 +21,7 @@ Alsa::Card::Card(int index) {
 
   _snd_ctl = std::shared_ptr<snd_ctl_t>(_snd_ctl_ptr, snd_ctl_close);
 
-  snd_ctl_card_info_t *snd_card_info = nullptr;
+  snd_ctl_card_info_t* snd_card_info = nullptr;
 
   snd_ctl_card_info_alloca(&snd_card_info);
 

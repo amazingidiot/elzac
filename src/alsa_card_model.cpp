@@ -4,7 +4,7 @@
 
 #include <QDebug>
 
-QList<int> get_alsa_cards(Alsa::CardModel *cardmodel) {
+QList<int> get_alsa_cards(Alsa::CardModel* cardmodel) {
   QList<int> cards;
 
   int card_index = -1;
@@ -30,10 +30,10 @@ QList<int> get_alsa_cards(Alsa::CardModel *cardmodel) {
   return cards;
 }
 
-Alsa::CardModel::CardModel(QObject *parent) {
+Alsa::CardModel::CardModel(QObject* parent) {
   this->setParent(parent);
 
-  udev *udev_ptr = udev_new();
+  udev* udev_ptr = udev_new();
 
   if (udev_ptr == NULL) {
     qCritical() << tr("Failed to initialize udev");
@@ -44,7 +44,7 @@ Alsa::CardModel::CardModel(QObject *parent) {
 
   _udev = std::shared_ptr<udev>(udev_ptr, udev_unref);
 
-  udev_monitor *udev_monitor_ptr =
+  udev_monitor* udev_monitor_ptr =
       udev_monitor_new_from_netlink(_udev.get(), "udev");
 
   if (udev_monitor_ptr == NULL) {
@@ -91,7 +91,7 @@ void Alsa::CardModel::updateCards() {
   bool any_change = false;
 
   while (true) {
-    udev_device *dev(udev_monitor_receive_device(_udev_monitor.get()));
+    udev_device* dev(udev_monitor_receive_device(_udev_monitor.get()));
 
     if (dev != 0) {
       QString devnode(udev_device_get_devnode(dev));

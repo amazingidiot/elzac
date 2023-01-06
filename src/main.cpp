@@ -7,14 +7,14 @@
 #include "osc_server.h"
 #include "sigwatch.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   QCoreApplication a(argc, argv);
 
   qSetMessagePattern("[%{time} %{type}] %{message}");
 
   QTranslator translator;
   const QStringList uiLanguages = QLocale::system().uiLanguages();
-  for (const QString &locale : uiLanguages) {
+  for (const QString& locale : uiLanguages) {
     qDebug() << QCoreApplication::tr("Trying to load language %1")
                     .arg(QLocale(locale).name());
 

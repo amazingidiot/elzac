@@ -13,7 +13,7 @@ namespace Alsa {
 class CardModel : public QObject {
   Q_OBJECT
 public:
-  explicit CardModel(QObject *parent = nullptr);
+  explicit CardModel(QObject* parent = nullptr);
   ~CardModel();
 
   QList<int> cards();

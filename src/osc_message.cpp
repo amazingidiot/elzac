@@ -1,7 +1,7 @@
 #include "osc_message.h"
 #include <memory>
 
-Osc::Message::Message(QNetworkDatagram *datagram) {
+Osc::Message::Message(QNetworkDatagram* datagram) {
   this->address = QString(datagram->data().constData());
 
   this->sourceAddress = datagram->senderAddress();

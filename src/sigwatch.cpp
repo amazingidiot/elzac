@@ -37,11 +37,11 @@
  * \see http://qt-project.org/doc/qt-5.0/qtdoc/unix-signals.html
  */
 class UnixSignalWatcherPrivate : public QObject {
-  UnixSignalWatcher *const q_ptr;
+  UnixSignalWatcher* const q_ptr;
   Q_DECLARE_PUBLIC(UnixSignalWatcher)
 
 public:
-  UnixSignalWatcherPrivate(UnixSignalWatcher *q);
+  UnixSignalWatcherPrivate(UnixSignalWatcher* q);
   ~UnixSignalWatcherPrivate();
 
   void watchForSignal(int signal);
@@ -51,13 +51,13 @@ public:
 
 private:
   static int sockpair[2];
-  QSocketNotifier *notifier;
+  QSocketNotifier* notifier;
   QList<int> watchedSignals;
 };
 
 int UnixSignalWatcherPrivate::sockpair[2];
 
-UnixSignalWatcherPrivate::UnixSignalWatcherPrivate(UnixSignalWatcher *q)
+UnixSignalWatcherPrivate::UnixSignalWatcherPrivate(UnixSignalWatcher* q)
     : q_ptr(q) {
   // Create socket pair
   if (::socketpair(AF_UNIX, SOCK_STREAM, 0, sockpair)) {
@@ -125,7 +125,7 @@ void UnixSignalWatcherPrivate::_q_onNotify(int sockfd) {
 /*!
  * Create a new UnixSignalWatcher as a child of the given \a parent.
  */
-UnixSignalWatcher::UnixSignalWatcher(QObject *parent)
+UnixSignalWatcher::UnixSignalWatcher(QObject* parent)
     : QObject(parent), d_ptr(new UnixSignalWatcherPrivate(this)) {}
 
 /*!

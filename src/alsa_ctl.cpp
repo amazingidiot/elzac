@@ -7,7 +7,7 @@ Alsa::Ctl::ElementList::ElementList(std::shared_ptr<snd_ctl_t> snd_ctl) {
 
   this->_snd_ctl = snd_ctl;
 
-  snd_ctl_elem_list_t *list;
+  snd_ctl_elem_list_t* list;
   int count;
 
   // get the list from ALSA
@@ -22,7 +22,7 @@ Alsa::Ctl::ElementList::ElementList(std::shared_ptr<snd_ctl_t> snd_ctl) {
   for (int i = 0; i < count; i++) {
     unsigned int id = snd_ctl_elem_list_get_numid(list, i);
 
-    Alsa::Ctl::Element *e = new Alsa::Ctl::Element(id, _snd_ctl);
+    Alsa::Ctl::Element* e = new Alsa::Ctl::Element(id, _snd_ctl);
 
     qDebug() << e->toString();
 
@@ -91,7 +91,7 @@ Alsa::Ctl::ElementList::getByName(QString name) {
 Alsa::Ctl::Element::Element(int id, std::shared_ptr<snd_ctl_t> snd_ctl) {
   this->_snd_ctl = snd_ctl;
 
-  snd_ctl_elem_info_t *_snd_ctl_elem_info_ptr;
+  snd_ctl_elem_info_t* _snd_ctl_elem_info_ptr;
 
   snd_ctl_elem_info_malloc(&_snd_ctl_elem_info_ptr);
 
@@ -102,7 +102,7 @@ Alsa::Ctl::Element::Element(int id, std::shared_ptr<snd_ctl_t> snd_ctl) {
 
   _id = id;
 
-  snd_ctl_elem_value_t *_snd_ctl_elem_value_ptr = nullptr;
+  snd_ctl_elem_value_t* _snd_ctl_elem_value_ptr = nullptr;
 
   snd_ctl_elem_value_malloc(&_snd_ctl_elem_value_ptr);
   snd_ctl_elem_value_set_numid(_snd_ctl_elem_value_ptr, id);
@@ -265,7 +265,7 @@ void Alsa::Ctl::ElementList::_socketActivated(QSocketDescriptor socket,
     return;
   }
 
-  snd_ctl_event_t *ptr = nullptr;
+  snd_ctl_event_t* ptr = nullptr;
   unsigned int mask;
   int err, numid;
 
