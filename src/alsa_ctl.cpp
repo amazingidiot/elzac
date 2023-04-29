@@ -100,6 +100,11 @@ Alsa::Ctl::Element::Element(int id, std::shared_ptr<snd_ctl_t> snd_ctl) {
   snd_ctl_elem_info_set_numid(_snd_ctl_elem_info.get(), id);
   snd_ctl_elem_info(_snd_ctl.get(), _snd_ctl_elem_info.get());
 
+  snd_ctl_card_info_t* _snd_ctl_card_info;
+  snd_ctl_card_info_alloca(&_snd_ctl_card_info);
+  snd_ctl_card_info(_snd_ctl.get(), _snd_ctl_card_info);
+  _card_index = snd_ctl_card_info_get_card(_snd_ctl_card_info);
+
   _id = id;
 
   snd_ctl_elem_value_t* _snd_ctl_elem_value_ptr = nullptr;
@@ -191,9 +196,7 @@ QString Alsa::Ctl::Element::name() {
 
 int Alsa::Ctl::Element::id() { return _id; }
 
-int Alsa::Ctl::Element::card_index() {
-  return snd_ctl_elem_info_get_device(_snd_ctl_elem_info.get());
-}
+int Alsa::Ctl::Element::card_index() { return _card_index; }
 
 int Alsa::Ctl::Element::type() {
   return snd_ctl_elem_info_get_type(_snd_ctl_elem_info.get());

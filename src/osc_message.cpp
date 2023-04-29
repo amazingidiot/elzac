@@ -222,6 +222,23 @@ QByteArray Osc::Message::toByteArray() {
 }
 
 QString Osc::Message::toString() {
+  QString valueString = "\n";
+
+  foreach (QVariant value, this->values) {
+    if (value.typeId() == QMetaType::Int) {
+      valueString += QString("i(%1)\n").arg(value.toInt());
+      continue;
+    }
+    if (value.typeId() == QMetaType::Bool) {
+      valueString += QString("b(%1)\n").arg(value.toBool());
+      continue;
+    }
+    if (value.typeId() == QMetaType::Float) {
+      valueString += QString("f(%1)\n").arg(value.toFloat());
+      continue;
+    }
+  }
+
   return QAbstractSocket::tr(
              "Sender: %1:%2, Receiver: %3:%4, Address: %5, Values: %6")
       .arg(this->sourceAddress.toString())
@@ -229,5 +246,5 @@ QString Osc::Message::toString() {
       .arg(this->destinationAddress.toString())
       .arg(this->destinationPort)
       .arg(this->address)
-      .arg(this->format());
+      .arg(valueString);
 }

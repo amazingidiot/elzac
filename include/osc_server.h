@@ -28,8 +28,14 @@ public:
   QRegularExpression pattern;
 
 signals:
-  bool received(std::shared_ptr<Osc::Message> received_message,
-                Osc::Server* server);
+  bool received(std::shared_ptr<Osc::Message> received_message);
+};
+
+class Subscription {
+public:
+  std::shared_ptr<Osc::Client> client;
+  int card_index;
+  int element_index;
 };
 
 class Server : public QObject {
@@ -50,6 +56,7 @@ private:
   qint32 _subscription_update_frequency = 15;
 
   QList<std::shared_ptr<Osc::Endpoint>> _endpoints;
+  QList<Osc::Subscription> _subscriptions;
 
 public:
   Server();
@@ -71,11 +78,18 @@ public slots:
   sendElementUpdateToAllClients(std::shared_ptr<Alsa::Ctl::Element> element);
 
   void sendOscMessage(std::shared_ptr<Osc::Message> message);
+  void sendOscMessage(std::shared_ptr<Osc::Message> message,
+                      std::shared_ptr<Osc::Client> client);
 
   void sendOscMessageToAllClients(std::shared_ptr<Osc::Message> message);
 
   void updateClientList();
+  std::shared_ptr<Osc::Client> getClient(QHostAddress address, quint16 port);
+
   void sendSubscriptionUpdates();
+
+  std::shared_ptr<Osc::Message>
+  createElementValueMessage(std::shared_ptr<Alsa::Ctl::Element> element);
 
   void endpoint_heartbeat(std::shared_ptr<Osc::Message> received_message);
 

@@ -37,13 +37,6 @@ int main(int argc, char* argv[]) {
   QObject::connect(&watcher, &UnixSignalWatcher::unixSignal, &a,
                    &QCoreApplication::quit);
 
-  // TODO: read and write settings
-  /* Stored settings:
-      local ip addresses to listen to
-      local port
-  */
-  // TODO: implement cli to config program
-
   Osc::Server server;
 
   server.setPort(31032);
